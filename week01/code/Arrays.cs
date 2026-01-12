@@ -12,8 +12,20 @@ public static class Arrays
         // Remember: Using comments in your program, write down your process for solving this problem
         // step by step before you write the code. The plan should be clear enough that it could
         // be implemented by another person.
-
-        return []; // replace this return statement with your own
+        
+        // Step 1: Create a new array of doubles with the specified length.
+        // Step 2: Loop from 0 to length-1, calculating each multiple as number * (i + 1).
+        // Step 3: Assign each calculated value to the corresponding index in the array.
+        // Step 4: Return the completed array.
+        
+        double[] multiples = new double[length];
+        
+        for (int i = 0; i < length; i++)
+        {
+            multiples[i] = number * (i + 1);
+        }
+        
+        return multiples;
     }
 
     /// <summary>
@@ -29,5 +41,23 @@ public static class Arrays
         // Remember: Using comments in your program, write down your process for solving this problem
         // step by step before you write the code. The plan should be clear enough that it could
         // be implemented by another person.
+        
+        // Step 1: Handle edge cases - if list is empty or amount is 0 or multiple of list size, no change needed.
+        // Step 2: Calculate the effective rotation amount using modulo to wrap around if amount > data.Count (though per spec, amount <= count).
+        // Step 3: Use list slicing to get the last 'amount' elements (which move to front).
+        // Step 4: Get the first (data.Count - amount) elements (which move to end).
+        // Step 5: Clear the original list.
+        // Step 6: Add the sliced last part first, then the first part to achieve rotation.
+        
+        if (data.Count == 0 || amount == 0) return;
+        
+        amount %= data.Count;  // Effective amount (safe even if amount > count)
+        
+        List<int> tail = data.GetRange(data.Count - amount, amount);  // Last 'amount' elements
+        List<int> head = data.GetRange(0, data.Count - amount);       // First part
+        
+        data.Clear();
+        data.AddRange(tail);
+        data.AddRange(head);
     }
 }
