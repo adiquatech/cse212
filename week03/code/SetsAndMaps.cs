@@ -21,8 +21,24 @@ public static class SetsAndMaps
     /// <param name="words">An array of 2-character words (lowercase, no duplicates)</param>
     public static string[] FindPairs(string[] words)
     {
-        // TODO Problem 1 - ADD YOUR CODE HERE
-        return [];
+        var set = new HashSet<string>(words);
+        var pairs = new List<string>();
+
+        foreach (var word in words)
+        {
+            if (word.Length != 2) continue; // safety, though problem guarantees
+
+            // Reverse the two characters
+            string reverse = word[1].ToString() + word[0];
+
+            // Only consider if reverse exists, is different from word, and we haven't added this pair yet
+            if (set.Contains(reverse) && word != reverse && string.Compare(word, reverse) < 0)
+            {
+                pairs.Add($"{word} & {reverse}");
+            }
+        }
+
+        return pairs.ToArray();
     }
 
     /// <summary>
@@ -42,7 +58,21 @@ public static class SetsAndMaps
         foreach (var line in File.ReadLines(filename))
         {
             var fields = line.Split(",");
-            // TODO Problem 2 - ADD YOUR CODE HERE
+            if (fields.Length > 3)
+            {
+                string degree = fields[3].Trim();
+                if (!string.IsNullOrEmpty(degree))
+                {
+                    if (degrees.ContainsKey(degree))
+                    {
+                        degrees[degree]++;
+                    }
+                    else
+                    {
+                        degrees[degree] = 1;
+                    }
+                }
+            }
         }
 
         return degrees;
@@ -66,9 +96,33 @@ public static class SetsAndMaps
     /// </summary>
     public static bool IsAnagram(string word1, string word2)
     {
-        // TODO Problem 3 - ADD YOUR CODE HERE
-        return false;
+        // Normalize: remove spaces, to lower
+        string s1 = new string(word1.Where(c => !char.IsWhiteSpace(c)).ToArray()).ToLower();
+        string s2 = new string(word2.Where(c => !char.IsWhiteSpace(c)).ToArray()).ToLower();
+
+        if (s1.Length != s2.Length) return false;
+
+        var count = new Dictionary<char, int>();
+
+        // Count chars in s1
+        foreach (char c in s1)
+        {
+            count[c] = count.GetValueOrDefault(c, 0) + 1;
+        }
+
+        // Subtract chars in s2
+        foreach (char c in s2)
+        {
+            if (!count.ContainsKey(c) || count[c] == 0)
+                return false;
+            count[c]--;
+        }
+
+        // All counts should be zero (but since lengths match and we subtracted, we can just return true)
+        return true;
     }
+
+    
 
     /// <summary>
     /// This function will read JSON (Javascript Object Notation) data from the 
@@ -88,19 +142,22 @@ public static class SetsAndMaps
     {
         const string uri = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
         using var client = new HttpClient();
-        using var getRequestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-        using var jsonStream = client.Send(getRequestMessage).Content.ReadAsStream();
-        using var reader = new StreamReader(jsonStream);
-        var json = reader.ReadToEnd();
+        string json = client.GetStringAsync(uri).GetAwaiter().GetResult(); // sync for simplicity
+
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var data = JsonSerializer.Deserialize<FeatureCollection>(json, options);
 
-        var featureCollection = JsonSerializer.Deserialize<FeatureCollection>(json, options);
+        var results = new List<string>();
 
-        // TODO Problem 5:
-        // 1. Add code in FeatureCollection.cs to describe the JSON using classes and properties 
-        // on those classes so that the call to Deserialize above works properly.
-        // 2. Add code below to create a string out each place a earthquake has happened today and its magitude.
-        // 3. Return an array of these string descriptions.
-        return [];
+        foreach (var feature in data.Features)
+        {
+            var p = feature.Properties;
+            if (p.Mag.HasValue && !string.IsNullOrWhiteSpace(p.Place))
+            {
+                results.Add($"{p.Place} - Mag {p.Mag}");
+            }
+        }
+
+        return results.ToArray();
     }
 }
